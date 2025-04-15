@@ -1,6 +1,5 @@
 import { models, Schema } from "mongoose";
 import mongoose from "mongoose";
-import { unique } from "next/dist/build/utils";
 
 interface IUser extends Document {
   id?: mongoose.Types.ObjectId;
