@@ -7,7 +7,7 @@ interface IUser extends Document {
   email?: string;
   password?: string;
   confirmPassword?: string;
-  status?: string;
+  status?: boolean;
   avatar?: string;
   lastseen?: Date | boolean;
   createdAt: Date;
@@ -32,7 +32,7 @@ const userSchema = new Schema<IUser>(
     },
 
     status: {
-      type: String,
+      type: Boolean,
       default: false,
     },
     avatar: {

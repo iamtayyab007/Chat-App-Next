@@ -3,6 +3,7 @@ import { NextAuthOptions } from "next-auth";
 import UserModel from "../../../../../models/User";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { connectToDatabase } from "../../../../../lib/connectDB";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -14,6 +15,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials: any): Promise<any> {
+        await connectToDatabase();
         try {
           const existingUser = await UserModel.findOne({
             $or: [
@@ -23,39 +25,21 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!existingUser) {
-            return NextResponse.json(
-              {
-                success: false,
-                message: "user doesnot exists, invalid credentials",
-              },
-              { status: 404 }
-            );
+            return null;
           }
           const comparePassword = await bcrypt.compare(
-            existingUser.password,
-            credentials.password
+            credentials.password,
+            existingUser.password
           );
 
           if (!comparePassword) {
-            return NextResponse.json(
-              {
-                success: false,
-                message: "invalid password",
-              },
-              { status: 401 }
-            );
+            return null;
           }
+          existingUser.status = true;
+          await existingUser.save();
           return existingUser;
         } catch (error: any) {
-          return NextResponse.json(
-            {
-              success: false,
-              message: error.message,
-            },
-            {
-              status: 400,
-            }
-          );
+          throw new Error(error);
         }
       },
     }),
@@ -93,4 +77,24 @@ export const authOptions: NextAuthOptions = {
     signOut: "/signout",
   },
   secret: process.env.NEXTAUTH_SECRET,
+
+  events: {
+    async signOut({ token }) {
+      try {
+        await connectToDatabase();
+        await UserModel.findOneAndUpdate(
+          {
+            email: token.email,
+          },
+          {
+            status: false,
+          },
+          { new: true }
+        );
+        console.log(`User ${token.email} signed out. Status set to false.`);
+      } catch (error: any) {
+        console.error("Error updating user status on signOut:", error.message);
+      }
+    },
+  },
 };
