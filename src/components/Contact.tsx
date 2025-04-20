@@ -1,15 +1,15 @@
 "use client";
 import axios from "axios";
+
 import { useState, useEffect } from "react";
 
-type User = {
-  status: string;
-  id: string;
-  username: string;
-  email: string;
+import { User } from "../../types/user";
+
+type ContactProps = {
+  userSelected: React.Dispatch<React.SetStateAction<User | null>>;
 };
 
-export default function Contact() {
+export default function Contact({ userSelected }: ContactProps) {
   const [allUsers, setAllUsers] = useState<User[]>([]);
 
   useEffect(() => {
@@ -27,8 +27,9 @@ export default function Contact() {
     fetchUserData();
   }, []);
 
+  console.log("all users", allUsers);
   // filtering out the online user
-  const filteredOnlineUser = allUsers.filter((user) => user.status !== "false");
+  const filteredOnlineUser = allUsers.filter((user) => user.status === true);
 
   console.log("filter", filteredOnlineUser);
 
@@ -39,8 +40,9 @@ export default function Contact() {
         <ul className="space-y-3">
           {allUsers.map((user) => (
             <li
-              key={user.id}
+              key={user._id}
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+              onClick={() => userSelected(user)}
             >
               <div className="flex items-center gap-3 cursor-pointer">
                 <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center text-white font-bold uppercase">
@@ -53,12 +55,12 @@ export default function Contact() {
               </div>
               <span
                 className={`${
-                  user.status === "true"
+                  user.status === true
                     ? "text-green-500 text-sm font-semibold"
                     : "text-red-500 text-sm font-semibold"
                 }`}
               >
-                {user.status === "true" ? "🟢 Online" : "🔴 Offline"}
+                {user.status === true ? "🟢 Online" : "🔴 Offline"}
               </span>
 
               {/* You can conditionally show online/offline status here if you track it */}
